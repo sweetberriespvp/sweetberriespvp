@@ -76,6 +76,22 @@
       display: block;
       border-radius: 8px;
     }
+
+    /* Medal styles */
+    .gold {
+      color: gold;
+      font-weight: bold;
+    }
+
+    .silver {
+      color: silver;
+      font-weight: bold;
+    }
+
+    .bronze {
+      color: #cd7f32;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -108,6 +124,7 @@
       "searz": { name: "Searz", berries: { current: 2, peak: 2 } },
       "superbearyo": { name: "superbearyo", berries: { current: 1, peak: 1 } },
       "uitimategaming": { name: "UItimateGaming", berries: { current: 1, peak: 1 } }
+      "vcubic": { name: "vCubic", berries: { current: 1, peak: 1 } }
     };
 
     let profiles = {};
@@ -123,38 +140,56 @@
     }
 
     function getTitle(points) {
-      if (points >= 400) return "🏆 Combat Grandmaster";
-      if (points >= 250) return "🔶 Combat Master";
-      if (points >= 100) return "💗 Combat Ace";
-      if (points >= 50) return "💜 Combat Specialist";
-      if (points >= 20) return "🔷 Combat Cadet";
-      if (points >= 10) return "🔹 Combat Novice";
-      return "⬛ Rookie";
-    }
+  if (points >= 60) return "🏆 Combat Grandmaster";
+  if (points >= 45) return "Combat Master";
+  if (points >= 30) return "Combat Elite";
+  if (points >= 20) return "Combat Ace";
+  if (points >= 10) return "Combat Specialist";
+  if (points >= 6) return "Combat Cadet";
+  if (points >= 4) return "Combat Novice";
+  if (points >= 3) return "Combat Trainee";
+  if (points >= 2) return "Combat Initiate";
+  if (points == -1) return "Sub Rookie";
+  return "Rookie";
+}
+
 
     function searchUser() {
-      const input = document.getElementById("usernameInput").value.trim().toLowerCase();
-      const display = document.getElementById("profileDisplay");
+  const input = document.getElementById("usernameInput").value.trim().toLowerCase();
+  const display = document.getElementById("profileDisplay");
 
-      if (!profiles[input]) {
-        profiles[input] = { name: input, berries: { current: 0, peak: 0 } };
-        saveProfiles();
-      }
+  if (!profiles[input]) {
+    profiles[input] = { name: input, berries: { current: 0, peak: 0 } };
+    saveProfiles();
+  }
 
-      currentUser = input;
-      const profile = profiles[currentUser];
-      const skinRenderURL = `https://minotar.net/helm/${profile.name}/128`;
+  currentUser = input;
+  const profile = profiles[currentUser];
+  const skinRenderURL = `https://minotar.net/helm/${profile.name}/128`;
 
-      display.innerHTML = `
-        <h3>${profile.name}</h3>
-        <img src="${skinRenderURL}" class="skin-render">
-        <p>Title: <strong>${getTitle(profile.berries.peak)}</strong></p>
-        <p>Current Points: ${profile.berries.current}</p>
-        <p>Peak Points: ${profile.berries.peak}</p>
-      `;
+  // Determine rank
+  const sorted = Object.entries(profiles)
+    .sort(([, a], [, b]) => b.berries.peak - a.berries.peak)
+    .map(([key]) => key);
 
-      renderLeaderboard();
-    }
+  const rankIndex = sorted.indexOf(currentUser);
+  let rankClass = "";
+  if (rankIndex === 0) rankClass = "gold";
+  else if (rankIndex === 1) rankClass = "silver";
+  else if (rankIndex === 2) rankClass = "bronze";
+
+  display.innerHTML = `
+    <div class="${rankClass}">
+      <h3>${profile.name}</h3>
+      <img src="${skinRenderURL}" class="skin-render">
+      <p>Title: <strong>${getTitle(profile.berries.peak)}</strong></p>
+      <p>Current Points: ${profile.berries.current}</p>
+      <p>Peak Points: ${profile.berries.peak}</p>
+    </div>
+  `;
+
+  renderLeaderboard();
+}
 
     function renderLeaderboard() {
       const sorted = Object.entries(profiles)
@@ -174,8 +209,13 @@
           <tbody>
             ${sorted.map(([key, profile], index) => {
               const skinURL = `https://minotar.net/helm/${profile.name}/32`;
+              let rankClass = "";
+              if (index === 0) rankClass = "gold";
+              else if (index === 1) rankClass = "silver";
+              else if (index === 2) rankClass = "bronze";
+
               return `
-                <tr>
+                <tr class="${rankClass}">
                   <td>${index + 1}</td>
                   <td><img src="${skinURL}" class="avatar"> ${profile.name}</td>
                   <td>${profile.berries.peak}</td>
