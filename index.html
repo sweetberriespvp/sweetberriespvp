@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sweet Berries PvP Leaderboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    input {
+      background-color: #333;
+      color: white;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #profileDisplay, .leaderboard {
+      border: 2px solid #444;
+      background-color: #222;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 800px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #444;
+    }
+
+    th {
+      background-color: #333;
+    }
+
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+
+    tr:hover {
+      background-color: #2a2a2a;
+    }
+
+    .avatar {
+      vertical-align: middle;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+
+    .skin-render {
+      margin: 10px auto;
+      display: block;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Sweet Berries PvP Leaderboard</h1>
+
+  <input type="text" id="usernameInput" placeholder="Enter username...">
+  <button onclick="searchUser()">Search</button>
+
+  <div id="profileDisplay">
+    <p>Search a player to view their profile.</p>
+  </div>
+
+  <div class="leaderboard">
+    <h2>Sweet Berries PvP Stats</h2>
+    <div id="berriesLeaderboard">Loading...</div>
+  </div>
+
+  <script>
+    const defaultProfiles = {
+      "alphaboy": { name: "AlphaBoy", berries: { current: 3, peak: 3 } },
+      "15acorn": { name: "15acorn", berries: { current: 1, peak: 2 } },
+      "frite211": { name: "FRITE211", berries: { current: 2, peak: 2 } },
+      "godology": { name: "Godology", berries: { current: 2, peak: 2 } },
+      "itouchedasheep": { name: "ITouchedASheep", berries: { current: -1, peak: -1 } },
+      "gammer_boy_2008": { name: "gammer_boy_2008", berries: { current: 1, peak: 1 } },
+      "dtoops095": { name: "Dtoops095", berries: { current: 1, peak: 1 } },
+      "f1shs_": { name: "f1shs_", berries: { current: 1, peak: 1 } },
+      "unfuser": { name: "unfuser", berries: { current: 2, peak: 2 } },
+      "searz": { name: "Searz", berries: { current: 2, peak: 2 } },
+      "superbearyo": { name: "superbearyo", berries: { current: 1, peak: 1 } },
+      "uitimategaming": { name: "UItimateGaming", berries: { current: 1, peak: 1 } }
+    };
+
+    let profiles = {};
+    let currentUser = null;
+
+    function loadProfiles() {
+      const saved = localStorage.getItem("berriesProfiles");
+      profiles = saved ? JSON.parse(saved) : structuredClone(defaultProfiles);
+    }
+
+    function saveProfiles() {
+      localStorage.setItem("berriesProfiles", JSON.stringify(profiles));
+    }
+
+    function getTitle(points) {
+      if (points >= 400) return "🏆 Combat Grandmaster";
+      if (points >= 250) return "🔶 Combat Master";
+      if (points >= 100) return "💗 Combat Ace";
+      if (points >= 50) return "💜 Combat Specialist";
+      if (points >= 20) return "🔷 Combat Cadet";
+      if (points >= 10) return "🔹 Combat Novice";
+      return "⬛ Rookie";
+    }
+
+    function searchUser() {
+      const input = document.getElementById("usernameInput").value.trim().toLowerCase();
+      const display = document.getElementById("profileDisplay");
+
+      if (!profiles[input]) {
+        profiles[input] = { name: input, berries: { current: 0, peak: 0 } };
+        saveProfiles();
+      }
+
+      currentUser = input;
+      const profile = profiles[currentUser];
+      const skinRenderURL = `https://minotar.net/helm/${profile.name}/128`;
+
+      display.innerHTML = `
+        <h3>${profile.name}</h3>
+        <img src="${skinRenderURL}" class="skin-render">
+        <p>Title: <strong>${getTitle(profile.berries.peak)}</strong></p>
+        <p>Current Points: ${profile.berries.current}</p>
+        <p>Peak Points: ${profile.berries.peak}</p>
+      `;
+
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const sorted = Object.entries(profiles)
+        .sort(([, a], [, b]) => b.berries.peak - a.berries.peak)
+        .slice(0, 100);
+
+      const tableHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Username</th>
+              <th>Points</th>
+              <th>Title</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map(([key, profile], index) => {
+              const skinURL = `https://minotar.net/helm/${profile.name}/32`;
+              return `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td><img src="${skinURL}" class="avatar"> ${profile.name}</td>
+                  <td>${profile.berries.peak}</td>
+                  <td>${getTitle(profile.berries.peak)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById("berriesLeaderboard").innerHTML = tableHTML;
+    }
+
+    loadProfiles();
+    renderLeaderboard();
+  </script>
+</body>
+</html>
